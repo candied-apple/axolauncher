@@ -21,19 +21,28 @@ module.exports = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      "config": {
+        "icon": "./assets/icon.ico"
+      },
     },
     {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin'],
+      "config": {
+        "icon": "./assets/icon.icns"
+      }
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {},
+      config: {
+        icon: './assets/icon.png'
+      },
     },
     {
       name: '@electron-forge/maker-rpm',
-      config: {},
+      config: {
+        icon: './assets/icon.png'
+      },
     },
   ],
   plugins: [
