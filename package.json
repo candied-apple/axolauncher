@@ -1,7 +1,7 @@
 {
   "name": "axolauncher",
   "productName": "axolauncher",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A cross-platform launcher for AxoCore",
   "main": ".webpack/main",
   "scripts": {
@@ -11,16 +11,11 @@
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\""
   },
-  "build": {
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "candied-apple",
-        "repo": "axolauncher"
-      }
-    ]
-  },
   "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/candied-apple/axolauncher.git"
+  },
   "author": {
     "name": "candied apple",
     "email": "50497574+candied-apple@users.noreply.github.com"

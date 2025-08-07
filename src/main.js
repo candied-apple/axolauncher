@@ -1,6 +1,9 @@
 
-// Enable auto-updates via update.electronjs.org (see https://github.com/electron/update-electron-app)
-require('update-electron-app')();
+
+// Enable auto-updates via update-electron-app (see https://github.com/electron/update-electron-app)
+const { updateElectronApp } = require('update-electron-app');
+updateElectronApp(); // additional configuration options available
+
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
 
