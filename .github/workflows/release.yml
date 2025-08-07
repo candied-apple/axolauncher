@@ -50,10 +50,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            artifacts/**/*.zip
-            artifacts/**/*.exe
-            artifacts/**/*.deb
-            artifacts/**/*.rpm
+          files: artifacts/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

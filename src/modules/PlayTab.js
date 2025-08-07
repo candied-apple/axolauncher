@@ -103,7 +103,7 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
       })}>
         <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 3 }}>
           <Avatar
-            src="https://cdn.discordapp.com/attachments/1138139561180985484/1138140034428919898/knightcat.png"
+            src="https://cdn.discordapp.com/icons/1039640054395572314/dae3addb699559494daea0750a7ee837.webp"
             alt="Profile"
             sx={theme => ({ width: 90, height: 90, mb: 1.5, border: `3px solid ${theme.palette.primary.main}` })}
           />
