@@ -14,17 +14,18 @@ if (require('electron-squirrel-startup')) {
 
 const createWindow = () => {
   // Create the browser window with custom frame and hidden title bar
-  const mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 600,
-    frame: false, // Disable native title bar for custom controls
-    titleBarStyle: 'hidden',
-    webPreferences: {
-      preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      nodeIntegration: false, // Use preload for Electron APIs
-      contextIsolation: true, // Required for contextBridge
-    },
-  });
+    const mainWindow = new BrowserWindow({
+        width: 1000,
+        height: 600,
+        frame: false, // Disable native title bar for custom controls
+        titleBarStyle: 'hidden',
+        icon: path.join(__dirname, '../assets/icon.ico'), // App icon
+        webPreferences: {
+            preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+            nodeIntegration: false, // Use preload for Electron APIs
+            contextIsolation: true, // Required for contextBridge
+        },
+    });
 
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 

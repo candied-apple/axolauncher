@@ -11,6 +11,28 @@
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\""
   },
+  "makers": [
+    {
+      "name": "@electron-forge/maker-squirrel",
+      "config": {
+        "setupIcon": "./assets/icon.ico"
+      }
+    },
+    {
+      "name": "@electron-forge/maker-zip",
+      "platforms": ["linux"],
+      "config": {
+        "icon": "./assets/icon.png"
+      }
+    },
+    {
+      "name": "@electron-forge/maker-zip",
+      "platforms": ["darwin"],
+      "config": {
+        "icon": "./assets/icon.icns"
+      }
+    }
+  ],
   "keywords": [],
   "repository": {
     "type": "git",
