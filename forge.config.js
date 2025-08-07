@@ -6,6 +6,18 @@ module.exports = {
     asar: true,
   },
   rebuildConfig: {},
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'candied-apple', // TODO: Replace with your GitHub username
+          name: 'axolauncher' // TODO: Replace with your repository name
+        },
+        prerelease: false
+      }
+    }
+  ],
   makers: [
     {
       name: '@electron-forge/maker-squirrel',

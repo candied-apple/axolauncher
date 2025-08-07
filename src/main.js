@@ -1,16 +1,8 @@
+
+// Enable auto-updates via update.electronjs.org (see https://github.com/electron/update-electron-app)
+require('update-electron-app')();
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
-
-// Auto-update and logging
-let autoUpdater, log;
-try {
-  autoUpdater = require('electron-updater').autoUpdater;
-  log = require('electron-log');
-  autoUpdater.logger = log;
-  autoUpdater.logger.transports.file.level = 'info';
-} catch (e) {
-  // electron-updater or electron-log not installed
-}
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -41,23 +33,6 @@ const createWindow = () => {
     mainWindow.close();
   });
 
-  // Auto-update
-  if (autoUpdater) {
-    // Notify renderer about update status
-    autoUpdater.on('update-available', () => {
-      mainWindow.webContents.send('toast', { type: 'info', message: 'Update available. Downloading...' });
-    });
-    autoUpdater.on('update-downloaded', () => {
-      mainWindow.webContents.send('toast', { type: 'success', message: 'Update downloaded. Restarting...' });
-      setTimeout(() => {
-        autoUpdater.quitAndInstall();
-      }, 3000);
-    });
-    autoUpdater.on('error', (err) => {
-      mainWindow.webContents.send('toast', { type: 'error', message: 'Update error: ' + (err && err.message ? err.message : err) });
-    });
-    autoUpdater.checkForUpdatesAndNotify();
-  }
 
   // Open the DevTools (optional, comment out for production)
   mainWindow.webContents.openDevTools();
