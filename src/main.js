@@ -43,6 +43,19 @@ const createWindow = () => {
 
   // Auto-update
   if (autoUpdater) {
+    // Notify renderer about update status
+    autoUpdater.on('update-available', () => {
+      mainWindow.webContents.send('toast', { type: 'info', message: 'Update available. Downloading...' });
+    });
+    autoUpdater.on('update-downloaded', () => {
+      mainWindow.webContents.send('toast', { type: 'success', message: 'Update downloaded. Restarting...' });
+      setTimeout(() => {
+        autoUpdater.quitAndInstall();
+      }, 3000);
+    });
+    autoUpdater.on('error', (err) => {
+      mainWindow.webContents.send('toast', { type: 'error', message: 'Update error: ' + (err && err.message ? err.message : err) });
+    });
     autoUpdater.checkForUpdatesAndNotify();
   }
 
