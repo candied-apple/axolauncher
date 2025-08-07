@@ -38,8 +38,7 @@ const createWindow = () => {
   });
 
 
-  // Open the DevTools (optional, comment out for production)
-  mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools(); // Disabled for production
 };
 
 // This method will be called when Electron has finished
