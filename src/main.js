@@ -322,8 +322,8 @@ ipcMain.on('launch-minecraft', async (event, opts) => {
   const gameDir = destDir;
   try {
     minecraftProcess = await axocore.launch({
-      // modLoader: 'fabric',
-      // fabricVersion: 'fabric-loader-0.16.14-1.20.1',
+    modLoader: 'fabric',
+    fabricVersion: 'fabric-loader-0.16.14-1.20.1',
     version,
     username: opts.username,
     password: opts.password,
