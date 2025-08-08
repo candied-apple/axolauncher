@@ -55,6 +55,10 @@ function App() {
     const saved = localStorage.getItem('ram');
     return saved ? Number(saved) : 4;
   });
+  const [minRam, setMinRam] = React.useState(() => {
+    const saved = localStorage.getItem('minRam');
+    return saved ? Number(saved) : 2;
+  });
   const [logLines, setLogLines] = React.useState([]);
   const theme = React.useMemo(() => getTheme(accent), [accent]);
   const t = TRANSLATIONS[language];
@@ -84,6 +88,7 @@ function App() {
   React.useEffect(() => { localStorage.setItem('language', language); }, [language]);
   React.useEffect(() => { localStorage.setItem('accent', accent); }, [accent]);
   React.useEffect(() => { localStorage.setItem('ram', ram); }, [ram]);
+  React.useEffect(() => { localStorage.setItem('minRam', minRam); }, [minRam]);
   React.useEffect(() => { localStorage.setItem('username', username); }, [username]);
   React.useEffect(() => { localStorage.setItem('password', password); }, [password]);
   React.useEffect(() => {
@@ -119,6 +124,8 @@ function App() {
             setProgress={setProgress}
             logLines={logLines}
             setLogLines={setLogLines}
+            ram={ram}
+            minRam={minRam}
           />
         )}
         {tab === 1 && <LogsTab t={t} logLines={logLines} />}
@@ -131,10 +138,12 @@ function App() {
             setAccent={setAccent}
             ram={ram}
             setRam={setRam}
+            minRam={minRam}
+            setMinRam={setMinRam}
           />
         )}
         {tab === 3 && <CreditsTab t={t} />}
-        {tab === 4 && <UpdateNotesTab t={t} />}
+  {tab === 4 && <UpdateNotesTab />}
       </Box>
       <Snackbar open={toast.open} autoHideDuration={4000} onClose={() => setToast(t => ({ ...t, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <MuiAlert elevation={6} variant="filled" onClose={() => setToast(t => ({ ...t, open: false }))} severity={toast.type} sx={{ width: '100%' }}>

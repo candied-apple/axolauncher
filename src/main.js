@@ -306,60 +306,68 @@ ipcMain.handle('update-files', async (event) => {
 });
 
 ipcMain.on('launch-minecraft', async (event, opts) => {
-  // opts: { username, password }
-  const win = BrowserWindow.getFocusedWindow();
-  if (minecraftProcess && !minecraftProcess.killed) {
-    win && win.webContents.send('game-log', '[Launcher] Minecraft is already running.');
-    win && win.webContents.send('game-status', { running: true });
-    return;
-  }
-  // Run updateFiles before launching Minecraft
-  try {
-    await updateFiles(win);
-  } catch (err) {
-    win && win.webContents.send('game-log', '[Launcher Error] Failed to update files: ' + err);
-    win && win.webContents.send('toast', { type: 'error', message: 'Failed to update files' });
-    win && win.webContents.send('game-status', { running: false });
-    return;
-  }
-  const version = '1.20.1';
-  const javaPath = 'java'; // or get from settings
-  const destDir = path.resolve(process.env.APPDATA || process.env.HOME, '.axocraft');
-  const gameDir = destDir;
-  try {
-    minecraftProcess = await axocore.launch({
-    modLoader: 'fabric',
-    fabricVersion: 'fabric-loader-0.16.14-1.20.1',
-    version,
-    username: opts.username,
-    password: opts.password,
-    javaPath,
-    destDir,
-    gameDir,
-    authServer: 'https://nested.candiedapple.me/api/yggdrasil/authserver',
-    javaArgs: [
-      `-javaagent:${path.join(gameDir, 'authlib-injector.jar')}=https://nested.candiedapple.me/api/yggdrasil`
-    ],
-    onDownloadProgress: (info) => {
-        win && win.webContents.send('download-progress', info);
-      },
-      onGameLog: (line) => {
-        win && win.webContents.send('game-log', line);
-      }
-    });
-    // Notify renderer that game is running
-    win && win.webContents.send('game-status', { running: true });
-    if (minecraftProcess && minecraftProcess.on) {
-      minecraftProcess.on('exit', () => {
-        minecraftProcess = null;
+    // opts: { username, password, ram, minRam }
+    const win = BrowserWindow.getFocusedWindow();
+    if (minecraftProcess && !minecraftProcess.killed) {
+        win && win.webContents.send('game-log', '[Launcher] Minecraft is already running.');
+        win && win.webContents.send('game-status', { running: true });
+        return;
+    }
+    // Run updateFiles before launching Minecraft
+    try {
+        await updateFiles(win);
+    } catch (err) {
+        win && win.webContents.send('game-log', '[Launcher Error] Failed to update files: ' + err);
+        win && win.webContents.send('toast', { type: 'error', message: 'Failed to update files' });
         win && win.webContents.send('game-status', { running: false });
-      });
+        return;
     }
-  } catch (err) {
-    win && win.webContents.send('game-log', '[Launcher Error] ' + err.message);
-    win && win.webContents.send('game-status', { running: false });
-    if (err && (err.message?.includes('403') || err.message?.toLowerCase().includes('forbidden'))) {
-      win && win.webContents.send('toast', { type: 'error', message: 'Invalid credentials' });
+    const version = '1.20.1';
+    const javaPath = 'java'; // or get from settings
+    const destDir = path.resolve(process.env.APPDATA || process.env.HOME, '.axocraft');
+    const gameDir = destDir;
+    // Default to 4 if not set, clamp between 1 and 16
+    let ram = Number(opts.ram);
+    if (isNaN(ram)) ram = 4;
+    ram = Math.max(1, Math.min(16, ram));
+    let minRam = Number(opts.minRam);
+    if (isNaN(minRam)) minRam = 2;
+    minRam = Math.max(1, Math.min(ram, minRam));
+    try {
+        minecraftProcess = await axocore.launch({
+                modLoader: 'fabric',
+                fabricVersion: 'fabric-loader-0.16.14-1.20.1',
+                version,
+                username: opts.username,
+                password: opts.password,
+                javaPath,
+                destDir,
+                gameDir,
+                authServer: 'https://nested.candiedapple.me/api/yggdrasil/authserver',
+                javaArgs: [
+                    `-javaagent:${path.join(gameDir, 'authlib-injector.jar')}=https://nested.candiedapple.me/api/yggdrasil`,
+                    `-Xmx${ram}G`,
+                    `-Xms${minRam}G`
+                ],
+                onDownloadProgress: (info) => {
+                        win && win.webContents.send('download-progress', info);
+                    },
+                    onGameLog: (line) => {
+                        win && win.webContents.send('game-log', line);
+                    }
+                });  // Notify renderer that game is running
+        win && win.webContents.send('game-status', { running: true });
+        if (minecraftProcess && minecraftProcess.on) {
+            minecraftProcess.on('exit', () => {
+                minecraftProcess = null;
+                win && win.webContents.send('game-status', { running: false });
+            });
+        }
+    } catch (err) {
+        win && win.webContents.send('game-log', '[Launcher Error] ' + err.message);
+        win && win.webContents.send('game-status', { running: false });
+        if (err && (err.message?.includes('403') || err.message?.toLowerCase().includes('forbidden'))) {
+            win && win.webContents.send('toast', { type: 'error', message: 'Invalid credentials' });
+        }
     }
-  }
 });

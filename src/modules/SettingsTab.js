@@ -9,7 +9,7 @@ import Slider from '@mui/material/Slider';
 
 import { GRADIENTS } from './Theme';
 
-export default function SettingsTab({ t, language, setLanguage, accent, setAccent, ram, setRam }) {
+export default function SettingsTab({ t, language, setLanguage, accent, setAccent, ram, setRam, minRam, setMinRam }) {
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* Minecraft Settings */}
@@ -17,15 +17,27 @@ export default function SettingsTab({ t, language, setLanguage, accent, setAccen
         <CardContent sx={{ py: 2 }}>
           <Typography variant="h6" color="primary" gutterBottom sx={{ fontSize: 15 }}>{t.minecraftSettings}</Typography>
           <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <Typography id="ram-slider-label" sx={{ fontSize: 13, color: '#fff', mb: 0.5 }}>{t.ram.replace('MB', 'GB')}</Typography>
+            <Typography id="max-ram-slider-label" sx={{ fontSize: 13, color: '#fff', mb: 0.5 }}>Max RAM (GB)</Typography>
             <Slider
-              aria-labelledby="ram-slider-label"
+              aria-labelledby="max-ram-slider-label"
               valueLabelDisplay="auto"
               min={1}
               max={16}
               step={0.25}
               value={ram}
               onChange={(_, v) => setRam(v)}
+              sx={{ color: theme => theme.palette.primary.main }}
+              valueLabelFormat={v => `${v} GB`}
+            />
+            <Typography id="min-ram-slider-label" sx={{ fontSize: 13, color: '#fff', mb: 0.5 }}>Min RAM (GB)</Typography>
+            <Slider
+              aria-labelledby="min-ram-slider-label"
+              valueLabelDisplay="auto"
+              min={1}
+              max={16}
+              step={0.25}
+              value={minRam}
+              onChange={(_, v) => setMinRam(v)}
               sx={{ color: theme => theme.palette.primary.main }}
               valueLabelFormat={v => `${v} GB`}
             />
