@@ -22,7 +22,8 @@ export const TRANSLATIONS = {
     initialRelease: 'Initial release',
     design: 'UI Design',
     backend: 'Backend',
-    testing: 'Testing',
+  testing: 'Testing',
+  invalidCredentials: 'Invalid credentials',
   },
   tr: {
     play: 'Oyna',
@@ -47,6 +48,7 @@ export const TRANSLATIONS = {
     initialRelease: 'İlk sürüm',
     design: 'Arayüz Tasarımı',
     backend: 'Sunucu',
-    testing: 'Test',
+  testing: 'Test',
+  invalidCredentials: 'Geçersiz giriş bilgileri',
   },
 };

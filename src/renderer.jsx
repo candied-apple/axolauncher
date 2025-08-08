@@ -63,17 +63,23 @@ function App() {
   const [toast, setToast] = React.useState({ open: false, message: '', type: 'info' });
 
   React.useEffect(() => {
+    function handleToast(data) {
+      let msg = data.message;
+      // If the backend sends the default 'Invalid credentials', localize it
+      if (msg === 'Invalid credentials') {
+        msg = t.invalidCredentials;
+      }
+      setToast({ open: true, message: msg, type: data.type || 'info' });
+    }
     if (window.electronAPI?.onToast) {
-      window.electronAPI.onToast((data) => {
-        setToast({ open: true, message: data.message, type: data.type || 'info' });
-      });
+      window.electronAPI.onToast(handleToast);
     } else if (window.electron && window.electron.on) {
       // fallback for contextBridge
       window.electron.on('toast', (event, data) => {
-        setToast({ open: true, message: data.message, type: data.type || 'info' });
+        handleToast(data);
       });
     }
-  }, []);
+  }, [t]);
 
   React.useEffect(() => { localStorage.setItem('language', language); }, [language]);
   React.useEffect(() => { localStorage.setItem('accent', accent); }, [accent]);
