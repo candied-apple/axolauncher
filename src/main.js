@@ -12,6 +12,7 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+const { version: LAUNCHER_VERSION } = require('../package.json');
 const createWindow = () => {
   // Create the browser window with custom frame and hidden title bar
     const mainWindow = new BrowserWindow({
@@ -19,7 +20,7 @@ const createWindow = () => {
         height: 600,
         frame: false, // Disable native title bar for custom controls
         titleBarStyle: 'hidden',
-        icon: path.join(__dirname, '../assets/icon.ico'), // App icon
+        icon: "./assets/icon.png", // App icon
         webPreferences: {
             preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
             nodeIntegration: false, // Use preload for Electron APIs
@@ -27,7 +28,12 @@ const createWindow = () => {
         },
     });
 
-  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+    mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+    // Expose launcher version to renderer
+    mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow.webContents.send('launcher-version', LAUNCHER_VERSION);
+    });
 
   // IPC handlers for custom window controls
   ipcMain.on('window-minimize', () => {
