@@ -28,10 +28,10 @@ module.exports = {
       },
     },
     {
-      name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
-      "config": {
-        "icon": "./assets/icon.icns"
+      name: '@electron-forge/maker-dmg',
+      config: {
+        icon: './assets/icon.icns',
+        format: 'ULFO'
       }
     },
     {
