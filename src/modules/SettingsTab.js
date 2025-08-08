@@ -9,7 +9,7 @@ import Slider from '@mui/material/Slider';
 
 import { GRADIENTS } from './Theme';
 
-export default function SettingsTab({ t, language, setLanguage, accent, setAccent, ram, setRam, minRam, setMinRam }) {
+export default function SettingsTab({ t, language, setLanguage, accent, setAccent, ram, setRam, minRam, setMinRam, javaArgs, setJavaArgs }) {
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* Minecraft Settings */}
@@ -40,6 +40,15 @@ export default function SettingsTab({ t, language, setLanguage, accent, setAccen
               onChange={(_, v) => setMinRam(v)}
               sx={{ color: theme => theme.palette.primary.main }}
               valueLabelFormat={v => `${v} GB`}
+            />
+            <TextField
+              label="Custom Java Arguments"
+              variant="outlined"
+              fullWidth
+              value={javaArgs}
+              onChange={e => setJavaArgs(e.target.value)}
+              sx={{ mt: 2, fontSize: 13 }}
+              placeholder="e.g. -XX:+UseG1GC -Dfile.encoding=UTF-8"
             />
           </Box>
         </CardContent>

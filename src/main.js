@@ -13,18 +13,20 @@ if (require('electron-squirrel-startup')) {
 }
 
 const { version: LAUNCHER_VERSION } = require('../package.json');
+
 const createWindow = () => {
-  // Create the browser window with custom frame and hidden title bar
+    // Use native title bar on macOS, custom on others
+    const isMac = process.platform === 'darwin';
     const mainWindow = new BrowserWindow({
         width: 1000,
         height: 600,
-        frame: false, // Disable native title bar for custom controls
-        titleBarStyle: 'hidden',
-        icon: "./assets/icon.png", // App icon
+        frame: isMac ? true : false,
+        titleBarStyle: isMac ? 'default' : 'hidden',
+        icon: "./assets/icon.png",
         webPreferences: {
             preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-            nodeIntegration: false, // Use preload for Electron APIs
-            contextIsolation: true, // Required for contextBridge
+            nodeIntegration: false,
+            contextIsolation: true,
         },
     });
 
@@ -306,7 +308,7 @@ ipcMain.handle('update-files', async (event) => {
 });
 
 ipcMain.on('launch-minecraft', async (event, opts) => {
-    // opts: { username, password, ram, minRam }
+    // opts: { username, password, ram, minRam, javaArgs }
     const win = BrowserWindow.getFocusedWindow();
     if (minecraftProcess && !minecraftProcess.killed) {
         win && win.webContents.send('game-log', '[Launcher] Minecraft is already running.');
@@ -334,6 +336,17 @@ ipcMain.on('launch-minecraft', async (event, opts) => {
     if (isNaN(minRam)) minRam = 2;
     minRam = Math.max(1, Math.min(ram, minRam));
     try {
+        // Build Java args array
+        let javaArgsArr = [
+            `-javaagent:${path.join(gameDir, 'authlib-injector.jar')}=https://nested.candiedapple.me/api/yggdrasil`,
+            `-Xmx${ram}G`,
+            `-Xms${minRam}G`
+        ];
+        if (opts.javaArgs && typeof opts.javaArgs === 'string' && opts.javaArgs.trim().length > 0) {
+            // Split by spaces, but respect quoted strings
+            const customArgs = opts.javaArgs.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+            javaArgsArr = javaArgsArr.concat(customArgs);
+        }
         minecraftProcess = await axocore.launch({
                 modLoader: 'fabric',
                 fabricVersion: 'fabric-loader-0.16.14-1.20.1',
@@ -344,11 +357,7 @@ ipcMain.on('launch-minecraft', async (event, opts) => {
                 destDir,
                 gameDir,
                 authServer: 'https://nested.candiedapple.me/api/yggdrasil/authserver',
-                javaArgs: [
-                    `-javaagent:${path.join(gameDir, 'authlib-injector.jar')}=https://nested.candiedapple.me/api/yggdrasil`,
-                    `-Xmx${ram}G`,
-                    `-Xms${minRam}G`
-                ],
+                javaArgs: javaArgsArr,
                 onDownloadProgress: (info) => {
                         win && win.webContents.send('download-progress', info);
                     },

@@ -59,6 +59,7 @@ function App() {
     const saved = localStorage.getItem('minRam');
     return saved ? Number(saved) : 2;
   });
+  const [javaArgs, setJavaArgs] = React.useState(() => localStorage.getItem('javaArgs') || '');
   const [logLines, setLogLines] = React.useState([]);
   const theme = React.useMemo(() => getTheme(accent), [accent]);
   const t = TRANSLATIONS[language];
@@ -89,6 +90,7 @@ function App() {
   React.useEffect(() => { localStorage.setItem('accent', accent); }, [accent]);
   React.useEffect(() => { localStorage.setItem('ram', ram); }, [ram]);
   React.useEffect(() => { localStorage.setItem('minRam', minRam); }, [minRam]);
+  React.useEffect(() => { localStorage.setItem('javaArgs', javaArgs); }, [javaArgs]);
   React.useEffect(() => { localStorage.setItem('username', username); }, [username]);
   React.useEffect(() => { localStorage.setItem('password', password); }, [password]);
   React.useEffect(() => {
@@ -126,6 +128,7 @@ function App() {
             setLogLines={setLogLines}
             ram={ram}
             minRam={minRam}
+            javaArgs={javaArgs}
           />
         )}
         {tab === 1 && <LogsTab t={t} logLines={logLines} />}
@@ -140,6 +143,8 @@ function App() {
             setRam={setRam}
             minRam={minRam}
             setMinRam={setMinRam}
+            javaArgs={javaArgs}
+            setJavaArgs={setJavaArgs}
           />
         )}
         {tab === 3 && <CreditsTab t={t} />}
