@@ -148,7 +148,7 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
             Luthien SMP
           </Typography>
           <Typography variant="subtitle2" color="#e0e0e0" align="center" sx={{ fontSize: 13 }}>
-            Online Status: {onlineStatus}
+            {onlineStatus}
             {playerCount !== null && onlineStatus === 'Online' ?
               ` (${playerCount}${maxPlayers !== null ? '/' + maxPlayers : ''})`
               : ''}

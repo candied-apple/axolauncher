@@ -19,7 +19,7 @@ const createWindow = () => {
     const isMac = process.platform === 'darwin';
     const mainWindow = new BrowserWindow({
         width: 1000,
-        height: 600,
+        height: 700,
         frame: isMac ? true : false,
         titleBarStyle: isMac ? 'default' : 'hidden',
         icon: "./assets/icon.png",
