@@ -35,12 +35,6 @@ module.exports = {
       }
     },
     {
-      name: '@electron-forge/maker-pkg',
-      config: {
-        identity: null // No signing
-      }
-    },
-    {
       name: '@electron-forge/maker-deb',
       config: {
         icon: './assets/icon.png'
