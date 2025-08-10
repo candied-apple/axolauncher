@@ -55,6 +55,11 @@ function App() {
     const saved = localStorage.getItem('ram');
     return saved ? Number(saved) : 4;
   });
+  const [minRam, setMinRam] = React.useState(() => {
+    const saved = localStorage.getItem('minRam');
+    return saved ? Number(saved) : 2;
+  });
+  const [javaArgs, setJavaArgs] = React.useState(() => localStorage.getItem('javaArgs') || '');
   const [logLines, setLogLines] = React.useState([]);
   const theme = React.useMemo(() => getTheme(accent), [accent]);
   const t = TRANSLATIONS[language];
@@ -63,21 +68,29 @@ function App() {
   const [toast, setToast] = React.useState({ open: false, message: '', type: 'info' });
 
   React.useEffect(() => {
+    function handleToast(data) {
+      let msg = data.message;
+      // If the backend sends the default 'Invalid credentials', localize it
+      if (msg === 'Invalid credentials') {
+        msg = t.invalidCredentials;
+      }
+      setToast({ open: true, message: msg, type: data.type || 'info' });
+    }
     if (window.electronAPI?.onToast) {
-      window.electronAPI.onToast((data) => {
-        setToast({ open: true, message: data.message, type: data.type || 'info' });
-      });
+      window.electronAPI.onToast(handleToast);
     } else if (window.electron && window.electron.on) {
       // fallback for contextBridge
       window.electron.on('toast', (event, data) => {
-        setToast({ open: true, message: data.message, type: data.type || 'info' });
+        handleToast(data);
       });
     }
-  }, []);
+  }, [t]);
 
   React.useEffect(() => { localStorage.setItem('language', language); }, [language]);
   React.useEffect(() => { localStorage.setItem('accent', accent); }, [accent]);
   React.useEffect(() => { localStorage.setItem('ram', ram); }, [ram]);
+  React.useEffect(() => { localStorage.setItem('minRam', minRam); }, [minRam]);
+  React.useEffect(() => { localStorage.setItem('javaArgs', javaArgs); }, [javaArgs]);
   React.useEffect(() => { localStorage.setItem('username', username); }, [username]);
   React.useEffect(() => { localStorage.setItem('password', password); }, [password]);
   React.useEffect(() => {
@@ -113,6 +126,9 @@ function App() {
             setProgress={setProgress}
             logLines={logLines}
             setLogLines={setLogLines}
+            ram={ram}
+            minRam={minRam}
+            javaArgs={javaArgs}
           />
         )}
         {tab === 1 && <LogsTab t={t} logLines={logLines} />}
@@ -125,10 +141,14 @@ function App() {
             setAccent={setAccent}
             ram={ram}
             setRam={setRam}
+            minRam={minRam}
+            setMinRam={setMinRam}
+            javaArgs={javaArgs}
+            setJavaArgs={setJavaArgs}
           />
         )}
         {tab === 3 && <CreditsTab t={t} />}
-        {tab === 4 && <UpdateNotesTab t={t} />}
+  {tab === 4 && <UpdateNotesTab />}
       </Box>
       <Snackbar open={toast.open} autoHideDuration={4000} onClose={() => setToast(t => ({ ...t, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <MuiAlert elevation={6} variant="filled" onClose={() => setToast(t => ({ ...t, open: false }))} severity={toast.type} sx={{ width: '100%' }}>

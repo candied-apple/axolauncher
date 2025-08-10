@@ -11,8 +11,8 @@ export default function CreditsTab({ t }) {
         <Typography variant="h6" color="#fff" gutterBottom sx={{ fontSize: 16 }}>{t.creditsTitle}</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
           <Typography variant="body2" color="#fff" sx={{ fontSize: 13 }}>{t.design}: <b>candiedapple</b></Typography>
-          <Typography variant="body2" color="#fff" sx={{ fontSize: 13 }}>{t.backend}: <b>axolotl</b></Typography>
-          <Typography variant="body2" color="#fff" sx={{ fontSize: 13 }}>{t.testing}: <b>luthien</b></Typography>
+          <Typography variant="body2" color="#fff" sx={{ fontSize: 13 }}>{t.backend}: <b>axocore by candiedapple</b></Typography>
+          <Typography variant="body2" color="#fff" sx={{ fontSize: 13 }}>{t.testing}: <b>luthien community</b></Typography>
         </Box>
       </CardContent>
     </Card>

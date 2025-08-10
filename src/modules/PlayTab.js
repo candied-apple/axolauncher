@@ -15,11 +15,48 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 
-export default function PlayTab({ t, username, setUsername, password, setPassword, showPassword, setShowPassword, logLines, setLogLines }) {
+export default function PlayTab({ t, username, setUsername, password, setPassword, showPassword, setShowPassword, logLines, setLogLines, ram, minRam, javaArgs }) {
   const [progressText, setProgressText] = useState('');
   const [progress, setProgress] = useState(0);
   const [showProgress, setShowProgress] = useState(false);
+  const [onlineStatus, setOnlineStatus] = useState('Checking...');
+  const [playerCount, setPlayerCount] = useState(null);
+  const [maxPlayers, setMaxPlayers] = useState(null);
   const logBoxRef = useRef(null);
+  // Fetch server status
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchStatus() {
+      try {
+        const res = await fetch('https://api.mcstatus.io/v2/status/java/nested.candiedapple.me');
+        const data = await res.json();
+        if (cancelled) return;
+        if (data.online) {
+          setOnlineStatus('Online');
+          if (data.players && typeof data.players.online === 'number') {
+            setPlayerCount(data.players.online);
+            setMaxPlayers(typeof data.players.max === 'number' ? data.players.max : null);
+          } else {
+            setPlayerCount(null);
+            setMaxPlayers(null);
+          }
+        } else {
+          setOnlineStatus('Offline');
+          setPlayerCount(null);
+          setMaxPlayers(null);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setOnlineStatus('Error');
+          setPlayerCount(null);
+          setMaxPlayers(null);
+        }
+      }
+    }
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 15000); // refresh every 15s
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   useEffect(() => {
     // Helper for bytes formatting
@@ -111,7 +148,10 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
             Luthien SMP
           </Typography>
           <Typography variant="subtitle2" color="#e0e0e0" align="center" sx={{ fontSize: 13 }}>
-            Online Status: N/A
+            {onlineStatus}
+            {playerCount !== null && onlineStatus === 'Online' ?
+              ` (${playerCount}${maxPlayers !== null ? '/' + maxPlayers : ''})`
+              : ''}
           </Typography>
         </CardContent>
       </Card>
@@ -196,9 +236,9 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
             setProgressText('');
             setLogLines([]);
             if (window.electronAPI?.launchMinecraft) {
-              window.electronAPI.launchMinecraft({ username, password });
+              window.electronAPI.launchMinecraft({ username, password, ram, minRam, javaArgs });
             } else if (window.electronAPI) {
-              window.electronAPI.send && window.electronAPI.send('launch-minecraft', { username, password });
+              window.electronAPI.send && window.electronAPI.send('launch-minecraft', { username, password, ram, minRam, javaArgs });
             }
           }}
           disabled={showProgress && progress < 100}

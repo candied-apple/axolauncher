@@ -3,6 +3,18 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 
 export default function TitleBar() {
+  const [version, setVersion] = React.useState('');
+  React.useEffect(() => {
+    if (window.electronAPI?.onLauncherVersion) {
+      window.electronAPI.onLauncherVersion(setVersion);
+    } else if (window.electron && window.electron.on) {
+      window.electron.on('launcher-version', (event, v) => setVersion(v));
+    } else if (window.api && window.api.receive) {
+      window.api.receive('launcher-version', setVersion);
+    } else {
+      window.addEventListener('launcher-version', e => setVersion(e.detail));
+    }
+  }, []);
   return (
     <Box sx={{
       position: 'fixed',
@@ -19,6 +31,9 @@ export default function TitleBar() {
       borderBottom: '1px solid #23243a',
       pr: 1,
     }}>
+      <Box sx={{ ml: 2, color: '#fff', fontSize: 13, opacity: 0.7, fontWeight: 500, letterSpacing: 1 }}>
+        axolauncher{version && ` v${version}`}
+      </Box>
       <Box sx={{ ml: 'auto', display: 'flex', gap: 0.5, WebkitAppRegion: 'no-drag' }}>
         <Button
           onClick={() => window.electronAPI?.minimize()}
