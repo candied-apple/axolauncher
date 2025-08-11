@@ -6,7 +6,14 @@ import Box from '@mui/material/Box';
 
 export default function CreditsTab({ t }) {
   return (
-    <Card sx={theme => ({ maxWidth: 600, mx: 'auto', borderRadius: 2, background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.primary.main} 100%)`, boxShadow: 4, mb: 3 })}>
+    <Card sx={theme => ({
+      maxWidth: 800,
+      mx: 'auto',
+      borderRadius: 2,
+      background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+      boxShadow: 4,
+      mb: 3
+    })}>
       <CardContent sx={{ py: 2 }}>
         <Typography variant="h6" color="#fff" gutterBottom sx={{ fontSize: 16 }}>{t.creditsTitle}</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>

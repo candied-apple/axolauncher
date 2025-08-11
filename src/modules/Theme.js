@@ -5,6 +5,10 @@ export const GRADIENTS = {
   Orange: ['#ffb86c', '#ff6fcb'],
   Blue: ['#8ca6db', '#23243a'],
   Purple: ['#b993d6', '#8ca6db'],
+  Green: ['#43e97b', '#38f9d7'],
+  Red: ['#ff5858', '#f09819'],
+  Teal: ['#136a8a', '#267871'],
+  Gold: ['#f7971e', '#ffd200'],
 };
 
 export const getTheme = (gradientName = 'Pink') => {

@@ -1,5 +1,3 @@
-
-
 // Enable auto-updates via update-electron-app (see https://github.com/electron/update-electron-app)
 const { updateElectronApp } = require('update-electron-app');
 updateElectronApp(); // additional configuration options available
@@ -18,7 +16,7 @@ const createWindow = () => {
     // Use native title bar on macOS, custom on others
     const isMac = process.platform === 'darwin';
     const mainWindow = new BrowserWindow({
-        width: 1000,
+    width: 1100,
         height: 700,
         frame: isMac ? true : false,
         titleBarStyle: isMac ? 'default' : 'hidden',
@@ -153,6 +151,21 @@ async function updateFiles(win) {
                                     const expectedHash = file.hash;
                                     const fileUrl = `https://vds.candiedapple.me/files/${filename}`;
                                     const fullPath = path.join(minecraftPath, filename);
+                                    // If file is in whitelist, skip overwriting
+                                    if (filesToKeep.has(filename) || filesToKeep.has(path.normalize(filename))) {
+                                        win && win.webContents.send('game-log', `File ${filename} is whitelisted. Skipping overwrite.`);
+                                        processedFiles++;
+                                        cumulativeBytes += file.size || 0;
+                                        win && win.webContents.send('download-progress', {
+                                            type: 'server-files',
+                                            cumulativeBytes,
+                                            totalBytes,
+                                            processedFiles,
+                                            totalFiles
+                                        });
+                                        checkProgress();
+                                        return;
+                                    }
                                     let fileExists = fs.existsSync(fullPath);
                                     let fileHash = '';
                                     if (fileExists) {
@@ -301,10 +314,26 @@ async function updateFiles(win) {
     });
 }
 
+
 // IPC handler to allow renderer to trigger updateFiles directly if needed
 ipcMain.handle('update-files', async (event) => {
     const win = BrowserWindow.getFocusedWindow();
     return await updateFiles(win);
+});
+
+// IPC handler to kill the Minecraft process
+ipcMain.on('kill-game', (event) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (minecraftProcess && !minecraftProcess.killed) {
+        try {
+            minecraftProcess.kill('SIGKILL');
+            win && win.webContents.send('game-log', '[Launcher] Minecraft process killed.');
+        } catch (err) {
+            win && win.webContents.send('game-log', '[Launcher Error] Failed to kill Minecraft process: ' + err.message);
+        }
+    } else {
+        win && win.webContents.send('game-log', '[Launcher] No Minecraft process to kill.');
+    }
 });
 
 ipcMain.on('launch-minecraft', async (event, opts) => {

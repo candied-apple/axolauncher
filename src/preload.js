@@ -4,8 +4,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   minimize: () => ipcRenderer.send('window-minimize'),
   close: () => ipcRenderer.send('window-close'),
   launchMinecraft: (opts) => ipcRenderer.send('launch-minecraft', opts),
+  killGame: () => ipcRenderer.send('kill-game'),
   onLauncherVersion: (callback) => ipcRenderer.on('launcher-version', (event, version) => callback(version)),
   onGameLog: (callback) => ipcRenderer.on('game-log', (event, line) => callback(line)),
   onDownloadProgress: (callback) => ipcRenderer.on('download-progress', (event, info) => callback(info)),
   onToast: (callback) => ipcRenderer.on('toast', (event, data) => callback(data)),
+  onGameStatus: (callback) => ipcRenderer.on('game-status', (event, status) => callback(status)),
 });

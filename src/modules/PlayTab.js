@@ -9,19 +9,22 @@ import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import LinearProgress from '@mui/material/LinearProgress';
-import PersonIcon from '@mui/icons-material/Person';
-import LockIcon from '@mui/icons-material/Lock';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 
-export default function PlayTab({ t, username, setUsername, password, setPassword, showPassword, setShowPassword, logLines, setLogLines, ram, minRam, javaArgs }) {
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+
+export default function PlayTab({ t, username, setUsername, password, setPassword, showPassword, setShowPassword, logLines, setLogLines, ram, minRam, javaArgs, gameState, setGameState }) {
   const [progressText, setProgressText] = useState('');
   const [progress, setProgress] = useState(0);
   const [showProgress, setShowProgress] = useState(false);
   const [onlineStatus, setOnlineStatus] = useState('Checking...');
   const [playerCount, setPlayerCount] = useState(null);
   const [maxPlayers, setMaxPlayers] = useState(null);
+  const [onlinePlayers, setOnlinePlayers] = useState([]); // NEW: usernames
   const logBoxRef = useRef(null);
   // Fetch server status
   useEffect(() => {
@@ -36,20 +39,29 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
           if (data.players && typeof data.players.online === 'number') {
             setPlayerCount(data.players.online);
             setMaxPlayers(typeof data.players.max === 'number' ? data.players.max : null);
+            // Set online player usernames if available
+            if (Array.isArray(data.players.list)) {
+              setOnlinePlayers(data.players.list.map(p => typeof p === 'string' ? p : (p.name_clean || p.name || p.username || 'Unknown')));
+            } else {
+              setOnlinePlayers([]);
+            }
           } else {
             setPlayerCount(null);
             setMaxPlayers(null);
+            setOnlinePlayers([]);
           }
         } else {
           setOnlineStatus('Offline');
           setPlayerCount(null);
           setMaxPlayers(null);
+          setOnlinePlayers([]);
         }
       } catch (e) {
         if (!cancelled) {
           setOnlineStatus('Error');
           setPlayerCount(null);
           setMaxPlayers(null);
+          setOnlinePlayers([]);
         }
       }
     }
@@ -81,7 +93,12 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
           percent = Math.floor((info.fileBytesDownloaded / info.fileTotalBytes) * 100);
         }
         setProgress(percent);
-        setShowProgress(true);
+        // Hide progress bar if finished
+        if (percent >= 100) {
+          setShowProgress(false);
+        } else {
+          setShowProgress(true);
+        }
         let msg = '';
         if (typeof info.cumulativeBytes === 'number' && typeof info.totalBytes === 'number' && info.totalBytes > 0) {
           if (info.type === 'client') {
@@ -103,13 +120,16 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
         else msg = info.type || '';
         setProgressText(msg);
       };
-      // Remove previous listener if exists
       window.electronAPI.removeAllDownloadProgressListeners && window.electronAPI.removeAllDownloadProgressListeners();
       window.electronAPI.onDownloadProgress(progressListener);
     }
     if (window.electronAPI?.onGameLog) {
       logListener = (line) => {
         setLogLines(lines => [...lines, line]);
+        // Detect game started log
+        if (typeof line === 'string' && line.includes('Game took') && line.includes('seconds to start')) {
+          setGameState('running');
+        }
       };
       window.electronAPI.removeAllGameLogListeners && window.electronAPI.removeAllGameLogListeners();
       window.electronAPI.onGameLog(logListener);
@@ -131,68 +151,87 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
   return (
     <>
       <Card sx={theme => ({
-        maxWidth: 600,
+        maxWidth: 800,
         mx: 'auto',
         borderRadius: 2,
         background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
         boxShadow: 4,
         mb: 3,
       })}>
-        <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 3 }}>
-          <Avatar
-            src="https://cdn.discordapp.com/icons/1039640054395572314/dae3addb699559494daea0750a7ee837.webp"
-            alt="Profile"
-            sx={theme => ({ width: 90, height: 90, mb: 1.5, border: `3px solid ${theme.palette.primary.main}` })}
-          />
-          <Typography variant="h5" fontWeight={700} color="#fff" gutterBottom align="center" sx={{ fontSize: 22 }}>
-            Luthien SMP
-          </Typography>
-          <Typography variant="subtitle2" color="#e0e0e0" align="center" sx={{ fontSize: 13 }}>
-            {onlineStatus}
-            {playerCount !== null && onlineStatus === 'Online' ?
-              ` (${playerCount}${maxPlayers !== null ? '/' + maxPlayers : ''})`
-              : ''}
-          </Typography>
+        <CardContent sx={{
+          display: 'flex', flexDirection: 'row', alignItems: 'center', py: 3, gap: 3, justifyContent: 'center',
+        }}>
+          {/* Left: Avatar and server info */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 160 }}>
+            <Avatar
+              src="https://cdn.discordapp.com/icons/1039640054395572314/dae3addb699559494daea0750a7ee837.webp"
+              alt="Profile"
+              sx={theme => ({ width: 110, height: 110, mb: 1.5, border: `3px solid ${theme.palette.primary.main}` })}
+            />
+            <Typography variant="h5" fontWeight={700} color="#fff" gutterBottom align="center" sx={{ fontSize: 22 }}>
+              Luthien SMP
+            </Typography>
+            <Typography variant="subtitle2" color="#e0e0e0" align="center" sx={{ fontSize: 13 }}>
+              {onlineStatus}
+              {playerCount !== null && onlineStatus === 'Online' ?
+                ` (${playerCount}${maxPlayers !== null ? '/' + maxPlayers : ''})`
+                : ''}
+            </Typography>
+          </Box>
+          {/* Right: Online Users Gradient Container */}
+          <Box sx={{
+            ml: 3,
+            minWidth: 180,
+            borderRadius: 2,
+            background: 'rgba(0,0,0,0.5)',
+            boxShadow: 2,
+            px: 0.5,
+            py: 0.5,
+            minHeight: 110,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            justifyContent: 'flex-start',
+            width: '100%',
+          }}>
+            <Typography variant="subtitle2" sx={{ color: '#fff', fontWeight: 700, fontSize: 14, mb: onlinePlayers.length ? 0.5 : 0, ml: 0.5, mt: 0.5, textDecoration: 'underline', textUnderlineOffset: '3px' }}>
+              {t.onlineUsers || 'Online Users'}
+            </Typography>
+            {onlinePlayers.length > 0 ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, width: '100%' }}>
+                {onlinePlayers.map((name, idx) => (
+                  <Box key={name + idx} sx={{
+                    px: 1, py: 0.5, borderRadius: 1, background: 'rgba(0,0,0,0.18)', color: '#fff', fontWeight: 500, fontSize: 13, boxShadow: 1,
+                    width: '100%',
+                    m: 0,
+                  }}>{name}</Box>
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: '#fff', fontSize: 12, opacity: 0.7, ml: 0.5, mt: 0.5 }}>
+                {onlineStatus === 'Online' ? (t.noUsersOnline || 'No users online') : ''}
+              </Typography>
+            )}
+          </Box>
         </CardContent>
       </Card>
-      <Box sx={{ maxWidth: 600, mx: 'auto', display: 'flex', flexDirection: 'column', gap: 1.2 }}>
+  <Box sx={{ maxWidth: 800, mx: 'auto', display: 'flex', flexDirection: 'column', gap: 1.2 }}>
         <TextField
           variant="outlined"
           fullWidth
-          placeholder={t.username}
+          label={t.username}
           value={username}
           onChange={e => setUsername(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <PersonIcon sx={theme => ({ color: theme.palette.primary.main, fontSize: 18 })} />
-              </InputAdornment>
-            ),
-            sx: {
-              background: 'rgba(24,26,32,0.7)',
-              borderRadius: 2,
-              color: '#fff',
-              fontSize: 13,
-            },
-          }}
-          sx={{
-            input: { color: '#fff', fontSize: 13 },
-            mb: 0.5,
-          }}
+          sx={{ fontSize: 13, mb: 0.5 }}
         />
         <TextField
           variant="outlined"
           fullWidth
-          placeholder={t.password}
+          label={t.password}
           type={showPassword ? 'text' : 'password'}
           value={password}
           onChange={e => setPassword(e.target.value)}
           InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <LockIcon sx={theme => ({ color: theme.palette.primary.main, fontSize: 18 })} />
-              </InputAdornment>
-            ),
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton onClick={() => setShowPassword(v => !v)} edge="end" sx={theme => ({ color: theme.palette.primary.main, fontSize: 18 })}>
@@ -200,51 +239,66 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
                 </IconButton>
               </InputAdornment>
             ),
-            sx: {
-              background: 'rgba(24,26,32,0.7)',
-              borderRadius: 2,
-              color: '#fff',
-              fontSize: 13,
-            },
           }}
-          sx={{
-            input: { color: '#fff', fontSize: 13 },
-            mb: 1.2,
-          }}
+          sx={{ fontSize: 13, mb: 1.2 }}
         />
-        <Button
-          variant="contained"
-          size="small"
-          sx={theme => ({
-            background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-            color: '#fff',
-            fontWeight: 700,
-            borderRadius: 2,
-            py: 1,
-            fontSize: 14,
-            boxShadow: 2,
-            mb: 0.5,
-            '&:hover': {
-              background: `linear-gradient(90deg, ${theme.palette.secondary.main} 0%, ${theme.palette.primary.main} 100%)`,
-            },
-          })}
-          fullWidth
-          onClick={async () => {
-            // Only show progress when real download starts
-            setProgress(0);
-            setShowProgress(false);
-            setProgressText('');
-            setLogLines([]);
-            if (window.electronAPI?.launchMinecraft) {
-              window.electronAPI.launchMinecraft({ username, password, ram, minRam, javaArgs });
-            } else if (window.electronAPI) {
-              window.electronAPI.send && window.electronAPI.send('launch-minecraft', { username, password, ram, minRam, javaArgs });
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', gap: 1 }}>
+          <Button
+            variant="contained"
+            size="small"
+            sx={theme => ({
+              background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+              color: '#fff',
+              fontWeight: 700,
+              borderRadius: 2,
+              py: 1,
+              fontSize: 14,
+              boxShadow: 2,
+              mb: 0.5,
+              minWidth: 120,
+              px: 3,
+              '&:hover': {
+                background: `linear-gradient(90deg, ${theme.palette.secondary.main} 0%, ${theme.palette.primary.main} 100%)`,
+              },
+            })}
+            startIcon={
+              gameState === 'running' ? <CheckCircleIcon sx={{ color: '#00e676' }} /> :
+              <PlayArrowIcon />
             }
-          }}
-          disabled={showProgress && progress < 100}
-        >
-          {showProgress && progress < 100 ? t.launching : t.launch}
-        </Button>
+            onClick={async () => {
+              setProgress(0);
+              setShowProgress(false);
+              setProgressText('');
+              setLogLines([]);
+              setGameState('idle');
+              if (window.electronAPI?.launchMinecraft) {
+                window.electronAPI.launchMinecraft({ username, password, ram, minRam, javaArgs });
+              } else if (window.electronAPI) {
+                window.electronAPI.send && window.electronAPI.send('launch-minecraft', { username, password, ram, minRam, javaArgs });
+              }
+            }}
+            disabled={gameState === 'running'}
+          >
+            {gameState === 'running' ? t.running || 'Running' : t.launch}
+          </Button>
+          {gameState === 'running' && (
+            <Button
+              variant="outlined"
+              size="small"
+              color="error"
+              sx={{ minWidth: 36, px: 1.2, mb: 0.5, fontSize: 13, fontWeight: 700 }}
+              onClick={() => {
+                if (window.electronAPI?.killGame) {
+                  window.electronAPI.killGame();
+                } else if (window.electron && window.electron.send) {
+                  window.electron.send('kill-game');
+                }
+              }}
+            >
+              {t.kill || 'Kill'}
+            </Button>
+          )}
+        </Box>
         {showProgress && (
           <Box sx={{ width: '100%', mt: 0.5 }}>
             <LinearProgress variant="determinate" value={progress} sx={theme => ({ height: 6, borderRadius: 2, background: '#23243a', '& .MuiLinearProgress-bar': { background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)` } })} />

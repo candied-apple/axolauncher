@@ -1,32 +1,3 @@
-/**
- * This file will automatically be loaded by webpack and run in the "renderer" context.
- * To learn more about the differences between the "main" and the "renderer" context in
- * Electron, visit:
- *
- * https://electronjs.org/docs/tutorial/process-model
- *
- * By default, Node.js integration in this file is disabled. When enabling Node.js integration
- * in a renderer process, please be aware of potential security implications. You can read
- * more about security risks here:
- *
- * https://electronjs.org/docs/tutorial/security
- *
- * To enable Node.js integration in this file, open up `main.js` and enable the `nodeIntegration`
- * flag:
- *
- * ```
- *  // Create the browser window.
- *  mainWindow = new BrowserWindow({
- *    width: 800,
- *    height: 600,
- *    webPreferences: {
- *      nodeIntegration: true
- *    }
- *  });
- * ```
- */
-
-
 import React from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
@@ -43,6 +14,22 @@ import CreditsTab from './modules/CreditsTab';
 import UpdateNotesTab from './modules/UpdateNotesTab';
 
 function App() {
+  // Listen for game-status events from main process to update gameState
+  React.useEffect(() => {
+    if (window.electronAPI && window.electronAPI.onGameStatus) {
+      window.electronAPI.onGameStatus((status) => {
+        if (status && typeof status.running === 'boolean') {
+          setGameState(status.running ? 'running' : 'idle');
+        }
+      });
+    } else if (window.electron && window.electron.on) {
+      window.electron.on('game-status', (event, status) => {
+        if (status && typeof status.running === 'boolean') {
+          setGameState(status.running ? 'running' : 'idle');
+        }
+      });
+    }
+  }, []);
   const [tab, setTab] = React.useState(0);
   const [showPassword, setShowPassword] = React.useState(false);
   const [username, setUsername] = React.useState(() => localStorage.getItem('username') || '');
@@ -53,15 +40,24 @@ function App() {
   const [language, setLanguage] = React.useState(() => localStorage.getItem('language') || 'en');
   const [ram, setRam] = React.useState(() => {
     const saved = localStorage.getItem('ram');
-    return saved ? Number(saved) : 4;
+    return saved ? Math.round(Number(saved)) : 4;
   });
   const [minRam, setMinRam] = React.useState(() => {
     const saved = localStorage.getItem('minRam');
-    return saved ? Number(saved) : 2;
+    return saved ? Math.round(Number(saved)) : 2;
   });
   const [javaArgs, setJavaArgs] = React.useState(() => localStorage.getItem('javaArgs') || '');
   const [logLines, setLogLines] = React.useState([]);
+  const [gameState, setGameState] = React.useState('idle'); // Persisted game state
   const theme = React.useMemo(() => getTheme(accent), [accent]);
+
+  // Update CSS variables for scrollbar accent color when theme changes
+  React.useEffect(() => {
+    if (theme?.palette?.primary?.main && theme?.palette?.secondary?.main) {
+      document.body.style.setProperty('--accent-primary', theme.palette.primary.main);
+      document.body.style.setProperty('--accent-secondary', theme.palette.secondary.main);
+    }
+  }, [theme]);
   const t = TRANSLATIONS[language];
 
   // Toast state
@@ -108,7 +104,7 @@ function App() {
       <CssBaseline />
       <TitleBar />
       <Box sx={{ minHeight: '100vh', background: 'linear-gradient(180deg, #181a20 0%, #23243a 100%)', p: 2 }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, maxWidth: 600, mx: 'auto', pt: 4, display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2, maxWidth: 800, mx: 'auto', pt: 4, display: 'flex', justifyContent: 'center' }}>
           <MainTabs tab={tab} onChange={handleTabChange} labels={[t.play, t.logs, t.settings, t.credits, t.updateNotes]} />
         </Box>
         {tab === 0 && (
@@ -129,6 +125,8 @@ function App() {
             ram={ram}
             minRam={minRam}
             javaArgs={javaArgs}
+            gameState={gameState}
+            setGameState={setGameState}
           />
         )}
         {tab === 1 && <LogsTab t={t} logLines={logLines} />}

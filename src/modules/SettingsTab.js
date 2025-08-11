@@ -11,7 +11,7 @@ import { GRADIENTS } from './Theme';
 
 export default function SettingsTab({ t, language, setLanguage, accent, setAccent, ram, setRam, minRam, setMinRam, javaArgs, setJavaArgs }) {
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+  <Box sx={{ maxWidth: 800, mx: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* Minecraft Settings */}
       <Card sx={theme => ({ borderRadius: 2, background: theme.palette.background.paper, boxShadow: 4 })}>
         <CardContent sx={{ py: 2 }}>
@@ -23,9 +23,9 @@ export default function SettingsTab({ t, language, setLanguage, accent, setAccen
               valueLabelDisplay="auto"
               min={1}
               max={16}
-              step={0.25}
+              step={1}
               value={ram}
-              onChange={(_, v) => setRam(v)}
+              onChange={(_, v) => setRam(Math.round(v))}
               sx={{ color: theme => theme.palette.primary.main }}
               valueLabelFormat={v => `${v} GB`}
             />
@@ -35,9 +35,9 @@ export default function SettingsTab({ t, language, setLanguage, accent, setAccen
               valueLabelDisplay="auto"
               min={1}
               max={16}
-              step={0.25}
+              step={1}
               value={minRam}
-              onChange={(_, v) => setMinRam(v)}
+              onChange={(_, v) => setMinRam(Math.round(v))}
               sx={{ color: theme => theme.palette.primary.main }}
               valueLabelFormat={v => `${v} GB`}
             />
@@ -69,6 +69,8 @@ export default function SettingsTab({ t, language, setLanguage, accent, setAccen
             >
               <MenuItem value="en">English</MenuItem>
               <MenuItem value="tr">Türkçe</MenuItem>
+              <MenuItem value="ja">日本語</MenuItem>
+              <MenuItem value="de">Deutsch</MenuItem>
             </TextField>
             <TextField
               select
