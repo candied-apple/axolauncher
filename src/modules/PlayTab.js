@@ -159,42 +159,43 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
         mb: 3,
       })}>
         <CardContent sx={{
-          display: 'flex', flexDirection: 'row', alignItems: 'center', py: 3, gap: 3, justifyContent: 'center',
+          display: 'flex', flexDirection: 'row', alignItems: 'flex-start', py: 3, gap: 0, justifyContent: 'space-between',
         }}>
           {/* Left: Avatar and server info */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 160 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 220, maxWidth: 240, width: 240, pl: 1, pr: 2 }}>
             <Avatar
               src="https://cdn.discordapp.com/icons/1039640054395572314/dae3addb699559494daea0750a7ee837.webp"
               alt="Profile"
               sx={theme => ({ width: 110, height: 110, mb: 1.5, border: `3px solid ${theme.palette.primary.main}` })}
             />
-            <Typography variant="h5" fontWeight={700} color="#fff" gutterBottom align="center" sx={{ fontSize: 22 }}>
+            <Typography variant="h5" fontWeight={700} color="#fff" gutterBottom align="left" sx={{ fontSize: 22 }}>
               Luthien SMP
             </Typography>
-            <Typography variant="subtitle2" color="#e0e0e0" align="center" sx={{ fontSize: 13 }}>
+            <Typography variant="subtitle2" color="#e0e0e0" align="left" sx={{ fontSize: 13 }}>
               {onlineStatus}
               {playerCount !== null && onlineStatus === 'Online' ?
                 ` (${playerCount}${maxPlayers !== null ? '/' + maxPlayers : ''})`
                 : ''}
             </Typography>
           </Box>
-          {/* Right: Online Users Gradient Container */}
+          {/* Center: Empty spacer for symmetry */}
+          <Box sx={{ minWidth: 220, maxWidth: 240, width: 240 }} />
+          {/* Right: Online Users Vertical Box */}
           <Box sx={{
-            ml: 3,
             minWidth: 180,
+            maxWidth: 220,
             borderRadius: 2,
-            background: 'rgba(0,0,0,0.5)',
+            background: 'rgba(0, 0, 0, 0.2)',
             boxShadow: 2,
-            px: 0.5,
-            py: 0.5,
-            minHeight: 110,
+            px: 2,
+            py: 2,
+            minHeight: 180,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-start',
             justifyContent: 'flex-start',
-            width: '100%',
           }}>
-            <Typography variant="subtitle2" sx={{ color: '#fff', fontWeight: 700, fontSize: 14, mb: onlinePlayers.length ? 0.5 : 0, ml: 0.5, mt: 0.5, textDecoration: 'underline', textUnderlineOffset: '3px' }}>
+            <Typography variant="subtitle2" sx={{ color: '#fff', fontWeight: 700, fontSize: 15, mb: 1, ml: 0, mt: 0, textDecoration: 'underline', textUnderlineOffset: '3px' }}>
               {t.onlineUsers || 'Online Users'}
             </Typography>
             {onlinePlayers.length > 0 ? (
@@ -208,7 +209,7 @@ export default function PlayTab({ t, username, setUsername, password, setPasswor
                 ))}
               </Box>
             ) : (
-              <Typography variant="body2" sx={{ color: '#fff', fontSize: 12, opacity: 0.7, ml: 0.5, mt: 0.5 }}>
+              <Typography variant="body2" sx={{ color: '#fff', fontSize: 12, opacity: 0.7, ml: 0, mt: 0.5 }}>
                 {onlineStatus === 'Online' ? (t.noUsersOnline || 'No users online') : ''}
               </Typography>
             )}
