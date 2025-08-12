@@ -106,9 +106,10 @@ async function updateFiles(win) {
         const whitelistUrl = 'https://vds.candiedapple.me/whitelisted_files.json';
         const minecraftPath = path.resolve(process.env.APPDATA || process.env.HOME, '.axocraft');
 
-        let filesToKeep = new Set();
-        let directoriesToKeep = new Set();
-        let prefixesToKeep = [];
+    // Always use normalized, lowercased paths for comparison
+    let filesToKeep = new Set();
+    let directoriesToKeep = new Set();
+    let prefixesToKeep = [];
 
         // Fetch and parse whitelist
         https.get(whitelistUrl, (response) => {
@@ -119,8 +120,9 @@ async function updateFiles(win) {
             response.on('end', () => {
                 try {
                     const whitelist = JSON.parse(whitelistData);
-                    whitelist.files.forEach(file => filesToKeep.add(file));
-                    whitelist.directories.forEach(dir => directoriesToKeep.add(path.normalize(dir)));
+                    // Normalize and lowercase all whitelist files and directories
+                    whitelist.files.forEach(file => filesToKeep.add(path.normalize(file).toLowerCase()));
+                    whitelist.directories.forEach(dir => directoriesToKeep.add(path.normalize(dir).toLowerCase()));
                     if (whitelist.prefixes) {
                         prefixesToKeep = whitelist.prefixes.map(prefix => prefix.toLowerCase());
                     }
@@ -135,7 +137,7 @@ async function updateFiles(win) {
                                 const files = JSON.parse(data);
                                 let totalFiles = files.length;
                                 let processedFiles = 0;
-                                files.forEach(file => filesToKeep.add(path.normalize(file.filename)));
+                                // Don't add files from files.json to filesToKeep, only use whitelist for skipping
                                 // Calculate total size in bytes for all files
                                 let totalBytes = files.reduce((sum, file) => sum + (file.size || 0), 0);
                                 let cumulativeBytes = 0;
@@ -151,8 +153,10 @@ async function updateFiles(win) {
                                     const expectedHash = file.hash;
                                     const fileUrl = `https://vds.candiedapple.me/files/${filename}`;
                                     const fullPath = path.join(minecraftPath, filename);
+                                    // Normalize and lowercase for comparison
+                                    const normalizedFilename = path.normalize(filename).toLowerCase();
                                     // If file is in whitelist, skip overwriting
-                                    if (filesToKeep.has(filename) || filesToKeep.has(path.normalize(filename))) {
+                                    if (filesToKeep.has(normalizedFilename)) {
                                         win && win.webContents.send('game-log', `File ${filename} is whitelisted. Skipping overwrite.`);
                                         processedFiles++;
                                         cumulativeBytes += file.size || 0;
@@ -232,13 +236,15 @@ async function updateFiles(win) {
                                     });
                                 });
                                 function removeOldFiles() {
+                                    // Build a set of all normalized, lowercased filenames that should exist (from server files.json)
+                                    const serverFilesSet = new Set(files.map(f => path.normalize(f.filename).toLowerCase()));
                                     function deleteDirectoryRecursively(dirPath) {
-                                        fs.readdir(dirPath, (err, files) => {
+                                        fs.readdir(dirPath, (err, filesInDir) => {
                                             if (err) {
                                                 win && win.webContents.send('game-log', `Failed to read directory ${dirPath}: ${err}`);
                                                 return;
                                             }
-                                            files.forEach(file => {
+                                            filesInDir.forEach(file => {
                                                 const fullPath = path.join(dirPath, file);
                                                 fs.stat(fullPath, (err, stats) => {
                                                     if (err) {
@@ -249,12 +255,15 @@ async function updateFiles(win) {
                                                         deleteDirectoryRecursively(fullPath);
                                                     } else {
                                                         const relativeFilePath = path.relative(minecraftPath, fullPath);
-                                                        const baseDir = relativeFilePath.split(path.sep)[0];
-                                                        const fileName = path.basename(relativeFilePath);
+                                                        const normalizedRelative = path.normalize(relativeFilePath).toLowerCase();
+                                                        const baseDir = normalizedRelative.split(path.sep)[0];
+                                                        const fileName = path.basename(normalizedRelative);
+                                                        // Only delete if NOT in serverFilesSet and NOT whitelisted
                                                         if (
-                                                            !filesToKeep.has(relativeFilePath) &&
+                                                            !serverFilesSet.has(normalizedRelative) &&
+                                                            !filesToKeep.has(normalizedRelative) &&
                                                             !directoriesToKeep.has(baseDir) &&
-                                                            !prefixesToKeep.some(prefix => fileName.toLowerCase().startsWith(prefix))
+                                                            !prefixesToKeep.some(prefix => fileName.startsWith(prefix))
                                                         ) {
                                                             fs.unlink(fullPath, (err) => {
                                                                 if (err) {
@@ -272,7 +281,7 @@ async function updateFiles(win) {
                                                     win && win.webContents.send('game-log', `Failed to read directory ${dirPath} after deletion: ${err}`);
                                                     return;
                                                 }
-                                                if (remainingFiles.length === 0 && !directoriesToKeep.has(path.relative(minecraftPath, dirPath)) && !prefixesToKeep.some(prefix => path.basename(dirPath).toLowerCase().startsWith(prefix))) {
+                                                if (remainingFiles.length === 0 && !directoriesToKeep.has(path.relative(minecraftPath, dirPath).toLowerCase()) && !prefixesToKeep.some(prefix => path.basename(dirPath).toLowerCase().startsWith(prefix))) {
                                                     fs.rmdir(dirPath, (err) => {
                                                         if (err) {
                                                             win && win.webContents.send('game-log', `Failed to delete directory ${dirPath}: ${err}`);
